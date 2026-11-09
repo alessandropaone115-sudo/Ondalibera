@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ondalibera – Trasferisci le tue playlist gratis</title>
+<meta name="description" content="Trasferisci playlist tra Spotify, YouTube, YouTube Music e file TXT/CSV. Gratis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root { --ink:#10231C; --muted:#3A4F46; --bg:#F3F7F4; --soft:#DDEBE3; --line:#D5E2DA; --deep:#1F6B52; --accent:#FF8A5B; --err:#A3261B; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  a { color:#0E3B2E; } a:hover { color:var(--deep); }
+  h1, h2, h3 { font-family:'Space Grotesk', sans-serif; margin:0; }
+  .wrap { max-width:1100px; margin:0 auto; padding:0 20px; }
+  header .wrap { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding-top:18px; padding-bottom:18px; }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; }
+  nav { display:flex; gap:20px; flex-wrap:wrap; font-weight:500; }
+  nav a { text-decoration:none; }
+  .hero { padding:40px 0 28px; display:flex; flex-direction:column; gap:16px; max-width:720px; }
+  .pill { align-self:flex-start; background:var(--soft); color:#0E3B2E; font-size:14px; font-weight:600; padding:8px 14px; border-radius:999px; }
+  .hero h1 { font-size:clamp(36px,6vw,60px); line-height:1.03; letter-spacing:-0.02em; }
+  .hero p { margin:0; font-size:18px; line-height:1.55; color:var(--muted); }
+  .card { background:#fff; border-radius:26px; padding:clamp(20px,4vw,40px); box-shadow:0 1px 0 var(--line), 0 20px 60px rgba(16,35,28,.08); display:flex; flex-direction:column; gap:24px; }
+  .steps { display:flex; flex-wrap:wrap; gap:8px; }
+  .step { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; font-weight:600; font-size:14px; background:var(--bg); color:var(--muted); }
+  .step b { width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; background:#fff; color:var(--ink); }
+  .step.on { background:var(--ink); color:#fff; } .step.on b { background:var(--accent); }
+  .step.past { background:var(--soft); color:#0E3B2E; }
+  .view { display:flex; flex-direction:column; gap:18px; }
+  .view h2 { font-size:clamp(26px,4vw,32px); }
+  .hint { margin:0; color:var(--muted); font-size:16px; line-height:1.5; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+  .svc { display:flex; align-items:center; gap:12px; padding:16px; border-radius:18px; background:var(--bg); border:2px solid transparent; font:inherit; font-weight:600; font-size:16px; color:var(--ink); cursor:pointer; text-align:left; min-height:64px; }
+  .svc:hover { border-color:var(--ink); }
+  .ico { width:38px; height:38px; flex:none; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:12px 24px; border-radius:999px; border:none; font:inherit; font-weight:600; font-size:16px; cursor:pointer; background:var(--ink); color:#fff; text-decoration:none; }
+  .btn.accent { background:var(--accent); color:var(--ink); font-size:17px; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .link { background:none; border:none; font:inherit; font-weight:600; color:#0E3B2E; text-decoration:underline; cursor:pointer; padding:10px 0; align-self:flex-start; }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:16px; border-radius:16px; background:var(--bg); }
+  .row .grow { flex:1; min-width:150px; display:flex; flex-direction:column; gap:2px; }
+  .small { font-size:13px; color:var(--muted); }
+  .ok { color:var(--deep); font-weight:600; }
+  .err { color:var(--err); font-weight:600; margin:0; }
+  .warn { background:#FFF4E5; border-radius:14px; padding:14px 16px; line-height:1.5; }
+  label.pl { cursor:pointer; }
+  label.pl input { width:22px; height:22px; accent-color:var(--ink); }
+  label.pl.dis { opacity:.5; cursor:not-allowed; }
+  .drop { position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; padding:28px 18px; border:2px dashed #9DBBAE; border-radius:20px; background:var(--bg); cursor:pointer; text-align:center; }
+  .drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  textarea { font:inherit; font-size:16px; padding:14px; border-radius:14px; border:1px solid #9DBBAE; resize:vertical; width:100%; }
+  .bar { height:12px; background:var(--soft); border-radius:99px; overflow:hidden; }
+  .bar div { height:12px; background:var(--ink); border-radius:99px; transition:width .2s; }
+  details summary { cursor:pointer; font-weight:600; padding:6px 0; }
+  details ul { margin:6px 0 0; padding-left:20px; color:var(--muted); line-height:1.6; }
+  .spin { width:22px; height:22px; border:3px solid var(--soft); border-top-color:var(--ink); border-radius:50%; animation:sp 0.8s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  section.info { padding:56px 0 24px; display:flex; flex-direction:column; gap:18px; }
+  .three { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+  .three div { background:#fff; border-radius:20px; padding:22px; line-height:1.55; color:var(--muted); }
+  .three h3 { color:var(--ink); font-size:19px; margin-bottom:6px; }
+  footer { border-top:1px solid var(--line); margin-top:48px; padding:28px 0; color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="logo" href="#">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#10231C"/><path d="M7 20c3-6 6-6 9 0s6 6 9 0" stroke="#FF8A5B" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      Ondalibera
+    </a>
+    <nav aria-label="Principale"><a href="#app">Trasferisci</a><a href="#come">Come funziona</a><a href="#faq">FAQ</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <span class="pill">Gratis · senza account · niente abbonamenti</span>
+    <h1>Porta la tua musica ovunque.</h1>
+    <p>Sposta le tue playlist tra Spotify, YouTube, YouTube Music e file TXT/CSV. Tutto avviene nel tuo browser: nessun server conserva i tuoi dati.</p>
+  </div>
+
+  <section id="app" class="card" aria-live="polite">
+    <div class="steps" id="steps"></div>
+    <div class="view" id="view"></div>
+  </section>
+
+  <section class="info" id="come">
+    <h2>Come funziona</h2>
+    <div class="three">
+      <div><h3>1. Scegli origine e destinazione</h3>Spotify, YouTube, YouTube Music, oppure un file con un brano per riga.</div>
+      <div><h3>2. Collega gli account</h3>L'accesso avviene sulle pagine ufficiali di Spotify e Google. Noi non vediamo mai la tua password.</div>
+      <div><h3>3. Trasferisci</h3>Creiamo nuove playlist private e ti mostriamo i brani non trovati, scaricabili in CSV.</div>
+    </div>
+  </section>
+
+  <section class="info" id="faq">
+    <h2>Domande frequenti</h2>
+    <div class="three">
+      <div><h3>È gratis?</h3>Sì, completamente. Non ci sono piani a pagamento.</div>
+      <div><h3>Perché YouTube si ferma dopo circa 60 brani?</h3>Google concede a ogni app un limite giornaliero di operazioni. Quando finisce, scarica il CSV dei brani rimasti e riprendi il giorno dopo caricandolo come file.</div>
+      <div><h3>Dove finiscono i miei dati?</h3>Da nessuna parte: l'app gira nel browser e l'accesso dura solo finché tieni aperta la scheda.</div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">© 2026 Ondalibera. Progetto indipendente, non affiliato a Spotify, Google o YouTube.</div></footer>
+
+<script>
+'use strict';
+
+/* ================== CONFIGURAZIONE ==================
+   Incolla qui i tuoi Client ID (vedi LEGGIMI.md).        */
+const CONFIG = {
+  SPOTIFY_CLIENT_ID: '',
+  GOOGLE_CLIENT_ID: ''
+};
+/* ==================================================== */
+
+const REDIRECT_URI = location.origin + location.pathname;
+const SP_SCOPES = 'playlist-read-private playlist-read-collaborative user-library-read playlist-modify-private playlist-modify-public';
+const YT_SCOPE = 'https://www.googleapis.com/auth/youtube';
+const YT_DAILY_QUOTA = 10000;
+
+const SERVICES = {
+  spotify: { name: 'Spotify', color: '#1DB954', auth: 'spotify' },
+  ytmusic: { name: 'YouTube Music', color: '#C62828', auth: 'google' },
+  youtube: { name: 'YouTube', color: '#9A1B1B', auth: 'google' },
+  file:    { name: 'File TXT / CSV', dstName: 'File CSV (scarica)', color: '#2E7D32', auth: null }
+};
+// Nasconde i servizi di cui non è stata inserita la chiave
+if (!CONFIG.SPOTIFY_CLIENT_ID) delete SERVICES.spotify;
+const AUTH_NAMES ={ spotify: 'Spotify', google: 'Google (YouTube e YouTube Music)' };
+
+const S = {
+  step: 'src', src: null, dst: null,
+  playlists: [], selected: new Set(),
+  fileTracks: null, fileName: '', pasteText: '',
+  busy: false, error: '', prog: { label: '', pct: 0 },
+  results: [], quotaHit: false
+};
+
+/* ---------- utilità ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function randStr(n) { const a = new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a, (b) => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[b % 62]).join(''); }
+function b64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
+const tok = {
+  get(k) { try { const t = JSON.parse(sessionStorage.getItem('ol_tok_' + k)); return t && t.exp > Date.now() + 30000 ? t.access : null; } catch (e) { return null; } },
+  set(k, access, sec) { sessionStorage.setItem('ol_tok_' + k, JSON.stringify({ access, exp: Date.now() + sec * 1000 })); },
+  clear(k) { sessionStorage.removeItem('ol_tok_' + k); }
+};
+
+/* ---------- Spotify (PKCE, senza server) ---------- */
+async function spotifyLogin() {
+  if (!CONFIG.SPOTIFY_CLIENT_ID) { S.error = 'Manca lo Spotify Client ID nel file index.html (vedi LEGGIMI.md).'; return render(); }
+  const verifier = randStr(64);
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  const state = randStr(16);
+  sessionStorage.setItem('ol_verifier', verifier);
+  sessionStorage.setItem('ol_state', state);
+  sessionStorage.setItem('ol_wiz', JSON.stringify({ src: S.src, dst: S.dst }));
+  const p = new URLSearchParams({ client_id: CONFIG.SPOTIFY_CLIENT_ID, response_type: 'code', redirect_uri: REDIRECT_URI, code_challenge_method: 'S256', code_challenge: challenge, scope: SP_SCOPES, state });
+  location.href = 'https://accounts.spotify.com/authorize?' + p;
+}
+
+async function spotifyHandleRedirect() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return;
+  history.replaceState(null, '', location.pathname);
+  try { const w = JSON.parse(sessionStorage.getItem('ol_wiz') || 'null'); if (w && w.src && w.dst) { S.src = w.src; S.dst = w.dst; S.step = 'connect'; } } catch (e) {}
+  if (q.get('error')) { S.error = 'Accesso a Spotify annullato.'; return; }
+  if (q.get('state') !== sessionStorage.getItem('ol_state')) { S.error = 'Risposta di Spotify non valida, riprova.'; return; }
+  const body = new URLSearchParams({ client_id: CONFIG.SPOTIFY_CLIENT_ID, grant_type: 'authorization_code', code: q.get('code'), redirect_uri: REDIRECT_URI, code_verifier: sessionStorage.getItem('ol_verifier') || '' });
+  try {
+    const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_description || d.error || 'errore');
+    tok.set('spotify', d.access_token, d.expires_in || 3600);
+  } catch (e) { S.error = 'Spotify: accesso non riuscito (' + e.message + ').'; }
+}
+
+async function sp(pathOrUrl, opts = {}) {
+  const t = tok.get('spotify');
+  if (!t) throw new Error('La sessione Spotify è scaduta: ricollega l’account.');
+  const url = pathOrUrl.startsWith('http') ? pathOrUrl : 'https://api.spotify.com/v1' + pathOrUrl;
+  for (let i = 0; i < 6; i++) {
+    const headers = { Authorization: 'Bearer ' + t };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    const r = await fetch(url, { ...opts, headers });
+    if (r.status === 429) { const ra = Number(r.headers.get('Retry-After')) || 3; await sleep(Math.min(ra, 30) * 1000); continue; }
+    if (r.status === 204) return null;
+    const d = await r.json().catch(() => null);
+    if (!r.ok) {
+      if (r.status === 401) tok.clear('spotify');
+      let msg = (d && d.error && d.error.message) || ('errore ' + r.status);
+      if (r.status === 403) msg += ' (il tuo account è nella lista utenti dell’app Spotify? Vedi LEGGIMI.md)';
+      throw new Error('Spotify: ' + msg);
+    }
+    return d;
+  }
+  throw new Error('Spotify: troppe richieste, riprova tra qualche minuto.');
+}
+
+/* ---------- Google / YouTube ---------- */
+function googleLogin() {
+  if (!CONFIG.GOOGLE_CLIENT_ID) { S.error = 'Manca il Google Client ID nel file index.html (vedi LEGGIMI.md).'; return render(); }
+  if (!window.google || !google.accounts || !google.accounts.oauth2) { S.error = 'Il servizio di accesso Google non si è ancora caricato. Riprova tra un attimo.'; return render(); }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.GOOGLE_CLIENT_ID,
+    scope: YT_SCOPE,
+    callback: (resp) => {
+      if (resp.error) { S.error = 'Google: accesso non riuscito (' + resp.error + ').'; }
+      else { tok.set('google', resp.access_token, Number(resp.expires_in) || 3600); S.error = ''; }
+      render();
+    },
+    error_callback: (e) => { S.error = 'Google: finestra di accesso chiusa o bloccata (' + (e.type || 'errore') + ').'; render(); }
+  });
+  client.requestAccessToken();
+}
+
+async function yt(path, params = {}, opts = {}) {
+  const t = tok.get('google');
+  if (!t) throw new Error('La sessione Google è scaduta: ricollega l’account.');
+  const url = 'https://www.googleapis.com/youtube/v3/' + path + '?' + new URLSearchParams(params);
+  for (let i = 0; i < 3; i++) {
+    const headers = { Authorization: 'Bearer ' + t };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    const r = await fetch(url, { ...opts, headers });
+    const d = await r.json().catch(() => null);
+    if (r.ok) return d;
+    const reason = (d && d.error && d.error.errors && d.error.errors[0] && d.error.errors[0].reason) || '';
+    if (reason === 'quotaExceeded' || reason === 'dailyLimitExceeded' || reason === 'rateLimitExceeded' && i === 2) { const e = new Error('quota'); e.quota = true; throw e; }
+    if ((r.status === 409 || r.status >= 500 || reason === 'rateLimitExceeded') && i < 2) { await sleep(1500 * (i + 1)); continue; }
+    if (r.status === 401) tok.clear('google');
+    if (reason === 'youtubeSignupRequired') throw new Error('YouTube: questo account Google non ha un canale YouTube. Crealo su youtube.com e riprova.');
+    throw new Error('YouTube: ' + ((d && d.error && d.error.message) || ('errore ' + r.status)));
+  }
+}
+
+/* ---------- lettura sorgenti ---------- */
+function fromLine(line) {
+  const m = line.match(/^(.+?)\s+[-–—]\s+(.+)$/);
+  return m ? { artist: m[1].trim(), title: m[2].trim() } : { artist: '', title: line.trim() };
+}
+function cleanTitle(s) {
+  return s.replace(/\s*[\(\[][^\)\]]*(official|video|audio|lyric|testo|visualizer|hd|4k|remaster)[^\)\]]*[\)\]]/gi, '').replace(/\s+/g, ' ').trim();
+}
+function fromVideo(title, channel) {
+  let t = cleanTitle(title);
+  let artist = String(channel || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
+  const m = t.match(/^(.+?)\s+[-–—]\s+(.+)$/);
+  if (m) { artist = m[1].trim(); t = m[2].trim(); }
+  return { artist, title: t };
+}
+function splitCsv(line, d) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === d) { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function parseText(text, isCsv) {
+  const lines = String(text || '').replace(/^﻿/, '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const delim = lines[0].includes('\t') ? '\t' : (isCsv ? (lines[0].includes(';') ? ';' : ',') : null);
+  if (delim) {
+    const head = splitCsv(lines[0], delim).map((h) => h.trim().toLowerCase());
+    const ti = head.findIndex((h) => /^(title|titolo|track|track name|song|song name|brano|name|nome)$/.test(h));
+    const ai = head.findIndex((h) => /^(artist|artists|artista|artisti|artist name|artist name\(s\)|artist name\(s\))$/.test(h));
+    if (ti >= 0) {
+      return lines.slice(1).map((l) => { const c = splitCsv(l, delim); return { title: (c[ti] || '').trim(), artist: ai >= 0 ? (c[ai] || '').split(/[,;]/)[0].trim() : '' }; }).filter((x) => x.title);
+    }
+    return lines.map((l) => { const c = splitCsv(l, delim).map((x) => x.trim()).filter(Boolean); return c.length >= 2 ? { artist: c[0], title: c[1] } : fromLine(c[0] || ''); }).filter((x) => x.title);
+  }
+  return lines.map(fromLine).filter((x) => x.title);
+}
+
+async function loadPlaylists() {
+  if (S.src === 'file') {
+    return [{ id: '__file', name: S.fileName || 'Playlist importata', count: S.fileTracks.length, ok: true }];
+  }
+  if (S.src === 'spotify') {
+    const me = await sp('/me');
+    const out = [];
+    const liked = await sp('/me/tracks?limit=1');
+    out.push({ id: '__liked', name: 'Brani che mi piacciono', count: liked.total, ok: true });
+    let url = '/me/playlists?limit=50';
+    while (url) {
+      const d = await sp(url);
+      for (const p of d.items || []) {
+        if (!p) continue;
+        const own = (p.owner && p.owner.id === me.id) || p.collaborative;
+        const c = (p.items && p.items.total) != null ? p.items.total : ((p.tracks && p.tracks.total) || 0);
+        out.push({ id: p.id, name: p.name, count: c, ok: own, note: own ? '' : 'Non è tua: Spotify non permette di leggerne i brani' });
+      }
+      url = d.next;
+    }
+    return out;
+  }
+  // YouTube / YouTube Music
+  const out = [{ id: '__liked', name: 'Video piaciuti', count: null, ok: true }];
+  let pageToken = '';
+  do {
+    const params = { part: 'snippet,contentDetails', mine: 'true', maxResults: '50' };
+    if (pageToken) params.pageToken = pageToken;
+    const d = await yt('playlists', params);
+    for (const p of d.items || []) out.push({ id: p.id, name: p.snippet.title, count: p.contentDetails.itemCount, ok: true });
+    pageToken = d.nextPageToken || '';
+  } while (pageToken);
+  return out;
+}
+
+async function getTracks(pl) {
+  if (pl.id === '__file') return S.fileTracks.slice();
+  const out = [];
+  if (S.src === 'spotify') {
+    let url = pl.id === '__liked' ? '/me/tracks?limit=50' : '/playlists/' + pl.id + '/items?limit=50';
+    while (url) {
+      const d = await sp(url);
+      for (const it of d.items || []) {
+        const t = it.item || it.track;
+        if (!t || !t.name || (t.type && t.type !== 'track')) continue;
+        out.push({ title: t.name, artist: (t.artists && t.artists[0] && t.artists[0].name) || '' });
+      }
+      url = d.next;
+    }
+    return out;
+  }
+  let pageToken = '';
+  do {
+    const base = pl.id === '__liked' ? { part: 'snippet', myRating: 'like', maxResults: '50' } : { part: 'snippet', playlistId: pl.id, maxResults: '50' };
+    if (pageToken) base.pageToken = pageToken;
+    const d = await yt(pl.id === '__liked' ? 'videos' : 'playlistItems', base);
+    for (const it of d.items || []) {
+      const sn = it.snippet;
+      if (!sn || sn.title === 'Deleted video' || sn.title === 'Private video') continue;
+      out.push(fromVideo(sn.title, sn.videoOwnerChannelTitle || sn.channelTitle));
+    }
+    pageToken = d.nextPageToken || '';
+  } while (pageToken);
+  return out;
+}
+
+/* ---------- scrittura destinazioni ---------- */
+const stripQ = (s) => String(s).replace(/["']/g, ' ').replace(/\s+/g, ' ').trim();
+async function spCreate(name) { const d = await sp('/me/playlists', { method: 'POST', body: JSON.stringify({ name, public: false, description: 'Creata con Ondalibera' }) }); return d.id; }
+async function spFind(t) {
+  const tries = t.artist ? ['track:' + stripQ(t.title) + ' artist:' + stripQ(t.artist), t.artist + ' ' + t.title] : [t.title];
+  for (const q of tries) {
+    const d = await sp('/search?' + new URLSearchParams({ q, type: 'track', limit: '1' }));
+    const it = d && d.tracks && d.tracks.items && d.tracks.items[0];
+    if (it) return it.uri;
+  }
+  return null;
+}
+async function spAdd(id, uris) { for (let i = 0; i < uris.length; i += 100) await sp('/playlists/' + id + '/items', { method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + 100) }) }); }
+
+async function ytCreate(name) { const d = await yt('playlists', { part: 'snippet,status' }, { method: 'POST', body: JSON.stringify({ snippet: { title: name, description: 'Creata con Ondalibera' }, status: { privacyStatus: 'private' } }) }); return d.id; }
+async function ytFind(t) { const d = await yt('search', { part: 'snippet', type: 'video', videoCategoryId: '10', maxResults: '1', q: (t.artist ? t.artist + ' ' : '') + t.title }); return (d.items && d.items[0] && d.items[0].id && d.items[0].id.videoId) || null; }
+async function ytAdd(pid, vid) { await yt('playlistItems', { part: 'snippet' }, { method: 'POST', body: JSON.stringify({ snippet: { playlistId: pid, resourceId: { kind: 'youtube#video', videoId: vid } } }) }); }
+
+function csvCell(v) { const s = String(v == null ? '' : v); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function downloadCsv(name, rows) {
+  const blob = new Blob(['﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ---------- trasferimento ---------- */
+function setProg(label, pct) { S.prog = { label, pct: Math.max(0, Math.min(100, pct)) }; render(); }
+
+async function runTransfer() {
+  const chosen = S.playlists.filter((p) => S.selected.has(p.id));
+  S.step = 'run'; S.results = []; S.quotaHit = false; S.error = '';
+  const csvRows = [];
+  for (let k = 0; k < chosen.length; k++) {
+    const pl = chosen[k];
+    const base = (k / chosen.length) * 100, span = 100 / chosen.length;
+    const res = { name: pl.name, total: 0, added: 0, missing: [], skipped: [], link: '' };
+    S.results.push(res);
+    let tracks = [];
+    try {
+      setProg('Leggo “' + pl.name + '”…', base);
+      tracks = await getTracks(pl);
+      res.total = tracks.length;
+      if (S.quotaHit) { res.skipped = tracks; continue; }
+      if (S.dst === 'file') { tracks.forEach((t) => csvRows.push([pl.name, t.artist, t.title])); res.added = tracks.length; continue; }
+      if (!tracks.length) continue;
+      if (S.dst === 'spotify') {
+        const id = await spCreate(pl.name);
+        res.link = 'https://open.spotify.com/playlist/' + id;
+        const uris = [];
+        for (let i = 0; i < tracks.length; i++) {
+          setProg(pl.name + ': cerco ' + (i + 1) + ' di ' + tracks.length, base + span * (i / tracks.length));
+          let u = null;
+          try { u = await spFind(tracks[i]); } catch (e) { if (/sessione/i.test(e.message)) throw e; }
+          if (u) uris.push(u); else res.missing.push(tracks[i]);
+        }
+        setProg(pl.name + ': aggiungo i brani…', base + span * 0.98);
+        await spAdd(id, uris);
+        res.added = uris.length;
+      } else {
+        const id = await ytCreate(pl.name);
+        res.link = (S.dst === 'ytmusic' ? 'https://music.youtube.com/playlist?list=' : 'https://www.youtube.com/playlist?list=') + id;
+        for (let i = 0; i < tracks.length; i++) {
+          setProg(pl.name + ': ' + (i + 1) + ' di ' + tracks.length, base + span * (i / tracks.length));
+          try {
+            const v = await ytFind(tracks[i]);
+            if (!v) { res.missing.push(tracks[i]); continue; }
+            await ytAdd(id, v);
+            res.added++;
+          } catch (e) {
+            if (e.quota) { S.quotaHit = true; res.skipped = tracks.slice(i); break; }
+            if (/sessione/i.test(e.message)) throw e;
+            res.missing.push(tracks[i]);
+          }
+          await sleep(250);
+        }
+      }
+    } catch (e) {
+      if (e.quota) { S.quotaHit = true; res.skipped = tracks.slice(res.added + res.missing.length); }
+      else { S.error = e.message; res.skipped = tracks.slice(res.added + res.missing.length); break; }
+    }
+  }
+  if (S.dst === 'file' && csvRows.length) downloadCsv('ondalibera-playlist.csv', [['Playlist', 'Artista', 'Titolo'], ...csvRows]);
+  S.step = 'done';
+  render();
+}
+
+/* ---------- interfaccia ---------- */
+const STEP_ORDER = ['src', 'dst', 'connect', 'select', 'run'];
+const STEP_LABEL = ['Origine', 'Destinazione', 'Collega', 'Scegli', 'Trasferisci'];
+const ico = (id) => '<span class="ico" aria-hidden="true" style="background:' + SERVICES[id].color + '">' + esc(SERVICES[id].name[0]) + '</span>';
+const needed = () => [...new Set([S.src, S.dst].map((x) => x && SERVICES[x].auth).filter(Boolean))];
+const errBox = () => S.error ? '<p class="err" role="alert">' + esc(S.error) + '</p>' : '';
+
+function viewSrc() {
+  return '<h2>Da dove parti?</h2><p class="hint">Scegli il servizio o il file che contiene la tua musica.</p><div class="grid">' +
+    Object.keys(SERVICES).map((id) => '<button class="svc" data-act="src" data-id="' + id + '">' + ico(id) + esc(SERVICES[id].name) + '</button>').join('') + '</div>';
+}
+function viewDst() {
+  return '<h2>Dove vuoi portarla?</h2><p class="hint">Origine: <strong>' + esc(SERVICES[S.src].name) + '</strong></p><div class="grid">' +
+    Object.keys(SERVICES).filter((id) => id !== S.src).map((id) => '<button class="svc" data-act="dst" data-id="' + id + '">' + ico(id) + esc(SERVICES[id].dstName || SERVICES[id].name) + '</button>').join('') +
+    '</div><button class="link" data-act="back-src">← Cambia origine</button>';
+}
+function viewConnect() {
+  let h = '<h2>Collega i tuoi account</h2><p class="hint">Da <strong>' + esc(SERVICES[S.src].name) + '</strong> a <strong>' + esc(SERVICES[S.dst].dstName || SERVICES[S.dst].name) + '</strong>. L’accesso avviene sulla pagina ufficiale del servizio.</p>';
+  for (const a of needed()) {
+    const ok = !!tok.get(a);
+    h += '<div class="row"><div class="grow"><span style="font-weight:600;font-size:17px">' + esc(AUTH_NAMES[a]) + '</span></div>' +
+      (ok ? '<span class="ok">✓ Collegato</span>' : '<button class="btn" data-act="login-' + a + '">Collega</button>') + '</div>';
+  }
+  if (S.src === 'file') {
+    if (S.fileTracks && S.fileTracks.length) {
+      h += '<div class="row"><div class="grow"><span style="font-weight:600">' + esc(S.fileName) + '</span><span class="small">' + S.fileTracks.length + ' brani letti. Esempio: ' + esc(S.fileTracks.slice(0, 3).map((t) => (t.artist ? t.artist + ' - ' : '') + t.title).join(' · ')) + '</span></div><button class="link" data-act="clear-file">Cambia</button></div>';
+    } else {
+      h += '<label class="drop"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#10231C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 20h16"/></svg>' +
+        '<span style="font-weight:600;font-size:17px">Tocca per scegliere un file .txt o .csv</span><span class="small">Un brano per riga, es. Artista - Titolo. Vanno bene anche i CSV esportati da altri servizi.</span>' +
+        '<input type="file" id="file" accept=".txt,.csv,text/plain,text/csv"></label>' +
+        '<label for="paste" style="font-weight:600">Oppure incolla l’elenco</label><textarea id="paste" rows="5" placeholder="Artista - Titolo">' + esc(S.pasteText) + '</textarea>' +
+        '<button class="btn" data-act="use-paste" style="align-self:flex-start">Usa questo elenco</button>';
+    }
+  }
+  const ready = needed().every((a) => tok.get(a)) && (S.src !== 'file' || (S.fileTracks && S.fileTracks.length));
+  h += errBox();
+  h += '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn accent" data-act="to-select" ' + (ready && !S.busy ? '' : 'disabled') + '>Continua</button>' +
+    (S.busy ? '<span class="spin" aria-label="Caricamento"></span>' : '') + '<button class="link" data-act="back-dst">← Cambia destinazione</button></div>';
+  return h;
+}
+function viewSelect() {
+  const sel = S.playlists.filter((p) => S.selected.has(p.id));
+  const n = sel.reduce((a, p) => a + (p.count || 0), 0);
+  let h = '<h2>Scegli cosa trasferire</h2><p class="hint">Verranno create nuove playlist private con lo stesso nome.</p>';
+  h += '<button class="link" data-act="all">' + (sel.length === S.playlists.filter((p) => p.ok).length ? 'Deseleziona tutto' : 'Seleziona tutto') + '</button><div style="display:flex;flex-direction:column;gap:10px">';
+  for (const p of S.playlists) {
+    h += '<label class="row pl' + (p.ok ? '' : ' dis') + '"><input type="checkbox" data-pl="' + esc(p.id) + '" ' + (S.selected.has(p.id) ? 'checked' : '') + (p.ok ? '' : ' disabled') + '>' +
+      '<span class="grow"><span style="font-weight:600">' + esc(p.name) + '</span>' + (p.note ? '<span class="small">' + esc(p.note) + '</span>' : '') + '</span>' +
+      '<span class="small" style="font-size:15px">' + (p.count == null ? '' : p.count + ' brani') + '</span></label>';
+  }
+  h += '</div>';
+  if (S.dst === 'youtube' || S.dst === 'ytmusic') {
+    const units = sel.length * 50 + n * 150;
+    if (units > YT_DAILY_QUOTA * 0.9) {
+      h += '<div class="warn"><strong>Attenzione:</strong> Google permette circa ' + Math.floor((YT_DAILY_QUOTA - 100) / 150) + ' brani al giorno per app. Hai selezionato ' + n + ' brani: il trasferimento si fermerà prima, e alla fine potrai scaricare il CSV dei brani rimasti per continuare domani.</div>';
+    }
+  }
+  if (S.dst === 'spotify') h += '<p class="small">Ogni brano viene cercato su Spotify: con playlist molto lunghe può volerci qualche minuto.</p>';
+  h += errBox();
+  h += '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn accent" data-act="start" ' + (sel.length ? '' : 'disabled') + '>Avvia trasferimento' + (n ? ' · ' + n + ' brani' : '') + '</button><button class="link" data-act="restart">Ricomincia</button></div>';
+  return h;
+}
+function viewRun() {
+  return '<h2>Trasferimento in corso…</h2><p class="hint">Tieni aperta questa pagina finché non finisce.</p>' +
+    '<div style="display:flex;justify-content:space-between;gap:12px;font-weight:600"><span>' + esc(S.prog.label) + '</span><span>' + Math.round(S.prog.pct) + '%</span></div>' +
+    '<div class="bar"><div style="width:' + S.prog.pct + '%"></div></div>';
+}
+function viewDone() {
+  const added = S.results.reduce((a, r) => a + r.added, 0);
+  const left = S.results.reduce((a, r) => a + r.missing.length + r.skipped.length, 0);
+  let h = '<h2>' + (S.error ? 'Trasferimento interrotto' : 'Fatto!') + '</h2><p class="hint">' + added + ' brani trasferiti' + (left ? ', ' + left + ' non trasferiti.' : '.') + '</p>' + errBox();
+  if (S.quotaHit) h += '<div class="warn"><strong>Limite giornaliero di YouTube raggiunto.</strong> Scarica il CSV dei brani rimasti e domani (dopo le 9:00 ora italiana) caricalo scegliendo “File TXT / CSV” come origine.</div>';
+  for (const r of S.results) {
+    h += '<div class="row" style="flex-direction:column;align-items:stretch"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center"><span style="font-weight:600;font-size:17px">' + esc(r.name) + '</span><span>' + r.added + ' / ' + r.total + '</span></div>';
+    if (r.link) h += '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Apri la playlist ↗</a>';
+    if (r.missing.length) h += '<details><summary>' + r.missing.length + ' brani non trovati</summary><ul>' + r.missing.map((t) => '<li>' + esc((t.artist ? t.artist + ' - ' : '') + t.title) + '</li>').join('') + '</ul></details>';
+    if (r.skipped.length) h += '<span class="small">' + r.skipped.length + ' brani da completare</span>';
+    h += '</div>';
+  }
+  h += '<div style="display:flex;flex-wrap:wrap;gap:12px">' + (left ? '<button class="btn" data-act="dl-left">Scarica i brani non trasferiti (CSV)</button>' : '') + '<button class="btn accent" data-act="restart">Nuovo trasferimento</button></div>';
+  return h;
+}
+
+function render() {
+  const cur = S.step === 'done' ? 5 : STEP_ORDER.indexOf(S.step);
+  $('steps').innerHTML = STEP_LABEL.map((l, i) => '<div class="step ' + (i === cur ? 'on' : i < cur ? 'past' : '') + '"><b>' + (i < cur ? '✓' : i + 1) + '</b>' + l + '</div>').join('');
+  const v = { src: viewSrc, dst: viewDst, connect: viewConnect, select: viewSelect, run: viewRun, done: viewDone }[S.step];
+  const ta = document.activeElement && document.activeElement.id === 'paste';
+  $('view').innerHTML = v();
+  if (ta && $('paste')) $('paste').focus();
+}
+
+function restart() {
+  Object.assign(S, { step: 'src', src: null, dst: null, playlists: [], selected: new Set(), fileTracks: null, fileName: '', pasteText: '', busy: false, error: '', results: [], quotaHit: false });
+  render();
+}
+
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  const act = b.dataset.act;
+  S.error = '';
+  if (act === 'src') { S.src = b.dataset.id; S.step = 'dst'; }
+  else if (act === 'dst') { S.dst = b.dataset.id; S.step = 'connect'; }
+  else if (act === 'back-src') { S.src = null; S.step = 'src'; }
+  else if (act === 'back-dst') { S.dst = null; S.step = 'dst'; }
+  else if (act === 'login-spotify') { return spotifyLogin(); }
+  else if (act === 'login-google') { return googleLogin(); }
+  else if (act === 'clear-file') { S.fileTracks = null; S.fileName = ''; }
+  else if (act === 'use-paste') {
+    S.pasteText = $('paste') ? $('paste').value : '';
+    const t = parseText(S.pasteText, false);
+    if (!t.length) S.error = 'Incolla almeno un brano, uno per riga.';
+    else { S.fileTracks = t; S.fileName = 'Playlist incollata'; }
+  }
+  else if (act === 'to-select') {
+    S.busy = true; render();
+    try { S.playlists = await loadPlaylists(); S.selected = new Set(S.playlists.filter((p) => p.ok).slice(0, 1).map((p) => p.id)); S.step = 'select'; }
+    catch (err) { S.error = err.message; }
+    S.busy = false;
+  }
+  else if (act === 'all') {
+    const okIds = S.playlists.filter((p) => p.ok).map((p) => p.id);
+    S.selected = S.selected.size === okIds.length ? new Set() : new Set(okIds);
+  }
+  else if (act === 'start') { return runTransfer(); }
+  else if (act === 'restart') { return restart(); }
+  else if (act === 'dl-left') {
+    const rows = [['Artista', 'Titolo', 'Playlist']];
+    for (const r of S.results) for (const t of [...r.missing, ...r.skipped]) rows.push([t.artist, t.title, r.name]);
+    downloadCsv('ondalibera-da-completare.csv', rows);
+    return;
+  }
+  render();
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.matches('input[data-pl]')) {
+    const id = e.target.dataset.pl;
+    if (e.target.checked) S.selected.add(id); else S.selected.delete(id);
+    render();
+  } else if (e.target.id === 'file') {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const t = parseText(r.result, /\.csv$/i.test(f.name) || f.type === 'text/csv');
+      if (!t.length) { S.error = 'Il file è vuoto o non contiene brani leggibili.'; }
+      else { S.fileTracks = t; S.fileName = f.name.replace(/\.(txt|csv)$/i, ''); S.error = ''; }
+      render();
+    };
+    r.onerror = () => { S.error = 'Non riesco a leggere il file. Prova a incollare il testo.'; render(); };
+    r.readAsText(f);
+  }
+});
+
+document.addEventListener('input', (e) => { if (e.target.id === 'paste') S.pasteText = e.target.value; });
+
+(async function init() {
+  render();
+  await spotifyHandleRedirect();
+  render();
+})();
+</script>
+</body>
+</html>
